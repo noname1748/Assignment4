@@ -1,12 +1,17 @@
 def Test_Stability(LRI, cur_Prob):
     no_test = 100
     max_Sim = 10000
+    no_pos = 0
+    ave_Step = 0
     for idx_test in range(0, no_test):
         (no_sim, p1) = LRI.LRI_Sim(cur_Prob, max_Sim)
-        if no_sim == max_Sim:
-            return False
-
-    return True
+        if p1[0] > 0.9:
+            no_pos = no_pos + 1
+            ave_Step = ave_Step + no_sim
+    if no_pos / no_test > 0.95:
+        return (True, ave_Step / no_pos)
+    else:
+        return (False, ave_Step / no_pos)
 
 
 def binary_search(low, high, ci, cur_Prob, Acc):
@@ -17,7 +22,8 @@ def binary_search(low, high, ci, cur_Prob, Acc):
         return high
     mid = (high + low) / 2
     LRI_mid = LRI.LRI(mid, ci)
-    if Test_Stability(LRI_mid, cur_Prob):
+    (flag, ave_Step) = Test_Stability(LRI_mid, cur_Prob)
+    if flag:
         (no_step, p1) = LRI_mid.LRI_Sim(cur_Prob, no_sim)
         if p1[0] > Acc:
             return binary_search(low, mid, ci, cur_Prob, Acc)
@@ -38,8 +44,9 @@ def Q3b(KR_min, KR_max, c1_range, Accuracy):
         ci = [c1_range[idx_c1], 0.7]
         KR = binary_search(KR_min, KR_max, ci, init_Prob, Accuracy)
         LRI_cur = LRI.LRI(KR, ci)
-        (no_step,p1) = LRI_cur.LRI_Sim([0.5,0.5],10000)
-        print "With Environment of [%.3f,%.3f], the best KR is %.5f which takes %.0f steps to converge to 95%% accuracy."%(ci[0],ci[1],KR,no_step)
+        (flag, ave_Step) = Test_Stability(LRI_cur, [0.5, 0.5])
+        print("With Environment of [%.3f,%.3f], the best KR is %.5f which takes %.0f steps to converge to 95%% accuracy." % (
+            ci[0], ci[1], KR, ave_Step))
 
 
 def Q3a(KR, no_sim):
@@ -53,7 +60,8 @@ def Q3a(KR, no_sim):
         ci = [c1[idx_c1], 0.7]
         L_RI = LRI.LRI(KR, ci)
         (no_step, P) = L_RI.LRI_Sim(init_Prob, no_sim)
-        print "Given KR = %.3f in Environment of [%.3f,%.3f], it takes %.0f times to converge." % (KR, ci[0], ci[1], no_step)
+        print("Given KR = %.3f in Environment of [%.3f,%.3f], it takes %.0f times to converge." % (
+            KR, ci[0], ci[1], no_step))
 
 if __name__ == "__main__":
     import numpy as np
